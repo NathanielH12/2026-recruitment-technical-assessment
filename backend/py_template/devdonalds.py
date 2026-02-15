@@ -42,27 +42,27 @@ def parse():
 
 # [TASK 1] ====================================================================
 # Takes in a recipeName and returns it in a form that 
-def parse_handwriting(recipeName: str) -> Union[str | None]:
+def parse_handwriting(recipe_name: str) -> Union[str | None]:
 
 	# All hyphens (-) and underscores (_) are replaced with a whitespace. 
-	recipeName = re.sub(r'[-_]', ' ', recipeName)
+	recipe_name = re.sub(r'[-_]', ' ', recipe_name)
 
 	# Food names can only contain letters and whitespaces.
-	recipeName = re.sub(r'[^A-Za-z\s]',  '', recipeName)
+	recipe_name = re.sub(r'[^A-Za-z\s]',  '', recipe_name)
 
-	# Words in recipeName are capitalized.
-	recipeName = ' '.join(word.capitalize() for word in recipeName.split())
+	# Words in recipe_name are capitalized.
+	recipe_name = ' '.join(word.capitalize() for word in recipe_name.split())
 
 
 	# Consecutive whitespaces are reduced to a single whitespace where this also
 	# includes leading and trailing whitespaces.
-	recipeName = re.sub(r'\s{2,}', ' ', recipeName).strip()
+	recipe_name = re.sub(r'\s{2,}', ' ', recipe_name).strip()
 
 	# If the input is an empty string, return None.
-	if len(recipeName) == 0:
+	if len(recipe_name) == 0:
 		return None
 
-	return recipeName
+	return recipe_name
 
 
 # [TASK 2] ====================================================================
@@ -108,8 +108,16 @@ def create_entry():
 # Endpoint that returns a summary of a recipe that corresponds to a query name
 @app.route('/summary', methods=['GET'])
 def summary():
-	return 'Not implemented', 500
+	recipe_name = request.args.get('name', None)
+	parsed_name = parse_handwriting(recipe_name)
 
+	entry = cookbook[parsed_name]
+	if not entry:
+		return 'A recipe with the corresponding name cannot be found.', 400
+	elif entry.get('type') != 'recipe':
+		return 'The searched name is NOT a recipe name.', 400
+
+	total_cook_time = 0
 
 # =============================================================================
 # ==== DO NOT TOUCH ===========================================================
