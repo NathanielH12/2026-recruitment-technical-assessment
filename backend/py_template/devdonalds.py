@@ -28,7 +28,7 @@ class Ingredient(CookbookEntry):
 app = Flask(__name__)
 
 # Store your recipes here!
-cookbook = None
+cookbook = {}
 
 # Task 1 helper (don't touch)
 @app.route("/parse", methods=['POST'])
@@ -68,17 +68,47 @@ def parse_handwriting(recipeName: str) -> Union[str | None]:
 # [TASK 2] ====================================================================
 # Endpoint that adds a CookbookEntry to your magical cookbook
 @app.route('/entry', methods=['POST'])
-def create_entry():
-	# TODO: implement me
-	return 'not implemented', 500
+def create_entry():	
+	data = request.get_json()
+	type = data.get('type')
+	parsed_name = parse_handwriting(data.get('name'))
+
+	if not parsed_name:
+		return 'Name can not be empty', 400
+
+	if type not in ['recipe', 'ingredient']:
+		return 'Type can only be "recipe" or "ingredient"', 400
+	elif type == 'ingredient' and data.get('cookTime') < 0:
+		return 'CookTime can only be greater than or equal to 0', 400
+	elif parsed_name in cookbook:
+		return 'Entry names must be unique', 400
+	elif type == 'recipe':
+		required_items = data.get('requiredItems', [])
+		required_item_names = set()
+		for item in required_items:
+			item_name = item.get('name')
+			if item_name in required_item_names:
+				return 'Recipe requiredItems can only have one element per name.', 400
+			required_item_names.add(item_name)
+
+	# Use data classes provided
+	if type == 'recipe':
+		required_items = [
+            RequiredItem(name=item['name'], quantity=item['quantity'])
+            for item in data.get('requiredItems', [])
+        ]
+		cookbook[parsed_name] = Recipe(name=parsed_name, required_items=required_items)
+	elif type == 'ingredient':
+		cookbook[parsed_name] = Ingredient(name=parsed_name, cook_time=data.get('cookTime', 0))
+
+	return '', 200
 
 
 # [TASK 3] ====================================================================
 # Endpoint that returns a summary of a recipe that corresponds to a query name
 @app.route('/summary', methods=['GET'])
 def summary():
-	# TODO: implement me
-	return 'not implemented', 500
+	return 'Not implemented', 500
 
 
 # =============================================================================
