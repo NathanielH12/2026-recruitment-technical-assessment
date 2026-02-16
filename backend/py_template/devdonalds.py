@@ -68,19 +68,19 @@ def parse_handwriting(recipe_name: str) -> Union[str | None]:
 @app.route('/entry', methods=['POST'])
 def create_entry():
 	data = request.get_json()
-	type = data.get('type')
+	entry_type = data.get('type')
 	parsed_name = parse_handwriting(data.get('name'))
 
 	if not parsed_name:
 		return 'Name can not be empty', 400
 
-	if type not in ['recipe', 'ingredient']:
+	if entry_type not in ['recipe', 'ingredient']:
 		return 'Type can only be "recipe" or "ingredient"', 400
-	elif type == 'ingredient' and data.get('cookTime') < 0:
+	elif entry_type == 'ingredient' and data.get('cookTime', 0) < 0:
 		return 'CookTime can only be greater than or equal to 0', 400
 	elif parsed_name in cookbook:
 		return 'Entry names must be unique', 400
-	elif type == 'recipe':
+	elif entry_type == 'recipe':
 		required_items = data.get('requiredItems', [])
 		required_item_names = set()
 		for item in required_items:
@@ -90,7 +90,7 @@ def create_entry():
 			required_item_names.add(item_name)
 
 	# Use data classes provided
-	if type == 'recipe':
+	if entry_type == 'recipe':
 		required_items = [
             RequiredItem(name=item['name'], quantity=item['quantity'])
             for item in data.get('requiredItems', [])
